@@ -1,0 +1,68 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             Int       @id @default(autoincrement())
+  email          String    @db.VarChar(255)
+  passwordHash   String    @db.VarChar(255)
+  name           String    @db.VarChar(255)
+  birthDate      DateTime? @db.Date
+  profilePicture Bytes?
+  createdAt      DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt      DateTime  @updatedAt @db.Timestamptz(6)
+  Address        Address?
+  phones         Phone[] // Relacionamento com telefones
+  documet        Document  @relation(fields: [documentId], references: [id])
+  documentId     Int       @unique
+
+  @@unique([email])
+  @@map("users")
+}
+
+model Address {
+  id         Int      @id @default(autoincrement())
+  userId     Int      @unique
+  street     String   @db.VarChar(255)
+  number     String   @db.VarChar(10)
+  postalCode String   @db.VarChar(20)
+  city       String   @db.VarChar(100)
+  country    String   @db.VarChar(100)
+  createdAt  DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt  DateTime @updatedAt @db.Timestamptz(6)
+  User       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([street, number, postalCode, city, country])
+  @@map("addresses")
+}
+
+model Phone {
+  id        Int      @id @default(autoincrement())
+  number    String   @db.VarChar(20)
+  isPrimary Boolean  @default(false)
+  userId    Int
+  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @db.Timestamptz(6)
+
+  @@unique([number])
+  @@map("phones")
+}
+
+model Document {
+  id        Int      @id @default(autoincrement())
+  rg        String   @db.VarChar(20)
+  cpf       String   @db.VarChar(20)
+  otherInfo String?  @db.VarChar(255) // Outros tipos de documentos, opcional
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @db.Timestamptz(6)
+  User      User?
+
+  @@unique([rg, cpf]) // Garantia de que RG e CPF sejam únicos
+  @@map("documents")
+}
