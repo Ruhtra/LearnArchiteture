@@ -1,6 +1,8 @@
 // src/domain/entities/User.ts
 import { z } from "zod";
-import { Address, AddressProps } from "./Address"; // Importando a entidade e os tipos de Address
+import { Address, AddressProps } from "./Address";
+import { Phone, PhoneProps } from "./Phone";
+import { Document, DocumentProps } from "./Document";
 
 export class User {
   public id: number;
@@ -9,10 +11,11 @@ export class User {
   public name: string;
   public birthDate?: Date;
   public profilePicture?: string;
-  public address?: Address; // Endereço opcional
+  public address?: Address;
+  public phones: Phone[] = []; // Relacionamento 1:N
+  public document: Document; // Relacionamento 1:1 obrigatório
 
   constructor(props: UserProps, id?: number) {
-    // Valida os dados de criação de usuário usando Zod
     User.createUserSchema.parse(props);
 
     this.email = props.email;
@@ -21,10 +24,11 @@ export class User {
     this.birthDate = props.birthDate;
     this.profilePicture = props.profilePicture;
     this.address = props.address ? new Address(props.address) : undefined;
+    this.document = new Document(props.document);
+    this.phones = props.phones.map((phone) => new Phone(phone));
     this.id = id || 0;
   }
 
-  // Tipos de dados para as propriedades de User (sem métodos)
   static createUserSchema = z.object({
     email: z.string().email("Invalid email format"),
     passwordHash: z.string().min(6, "Password must have at least 6 characters"),
@@ -32,6 +36,8 @@ export class User {
     birthDate: z.date().optional(),
     profilePicture: z.string().optional(),
     address: Address.createAddressSchema.optional(),
+    phones: z.array(Phone.createPhoneSchema).optional(),
+    document: Document.createDocumentSchema, // Documento obrigatório
   });
 
   static updateUserSchema = z.object({
@@ -41,9 +47,10 @@ export class User {
     birthDate: z.date().optional(),
     profilePicture: z.string().optional(),
     address: Address.updateAddressSchema.optional(),
+    phones: z.array(Phone.updatePhoneSchema).optional(),
+    document: Document.updateDocumentSchema.optional(),
   });
 
-  // Método para atualizar os dados do usuário
   public updateUser(data: Partial<UserProps>): void {
     User.updateUserSchema.parse(data);
 
@@ -56,9 +63,13 @@ export class User {
       if (this.address) {
         this.address.updateAddress(data.address);
       } else {
-        this.address = new Address(data.address as AddressProps);
+        this.address = new Address(data.address);
       }
     }
+    if (data.document) this.document.updateDocument(data.document);
+
+    if (data.phones)
+      this.phones = data.phones.map((phoneData) => new Phone(phoneData));
   }
 }
 
@@ -70,4 +81,6 @@ export type UserProps = {
   birthDate?: Date;
   profilePicture?: string;
   address?: AddressProps;
+  document: DocumentProps;
+  phones: PhoneProps[];
 };

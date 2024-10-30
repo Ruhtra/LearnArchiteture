@@ -1,14 +1,19 @@
 // src/infrastructure/repositories/PrismaUserRepository.ts
-import { PrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
 import { User } from "../../domain/entities/User";
 import { Address } from "../../domain/entities/Address";
+import { Document } from "../../domain/entities/Document";
 import { IUserRepository } from "../../application/repositories/IUserRepository";
-
-const prisma = new PrismaClient();
+import { Phone } from "../../domain/entities/Phone";
+import { DefaultArgs } from "@prisma/client/runtime/library";
 
 export class PrismaUserRepository implements IUserRepository {
+  constructor(
+    private prisma: PrismaClient<Prisma.PrismaClientOptions, never, DefaultArgs>
+  ) {}
+
   async create(user: User): Promise<User> {
-    const createdUser = await prisma.user.create({
+    const createdUser = await this.prisma.user.create({
       data: {
         email: user.email,
         passwordHash: user.passwordHash,
@@ -26,63 +31,161 @@ export class PrismaUserRepository implements IUserRepository {
               },
             }
           : undefined,
+        document: {
+          create: {
+            cpf: user.document.cpf,
+            rg: user.document.rg,
+            otherInfo: user.document.otherInfo,
+          },
+        },
+        phones: {
+          create: user.phones.map((phone) => ({
+            number: phone.number,
+            isPrimary: phone.isPrimary,
+          })),
+        },
       },
-      include: { Address: true },
+      include: { Address: true, document: true, phones: true },
     });
 
     return this.mapPrismaUserToDomain(createdUser);
   }
 
   async update(user: User): Promise<User> {
-    const updatedUser = await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        email: user.email,
-        passwordHash: user.passwordHash,
-        name: user.name,
-        birthDate: user.birthDate,
-        profilePicture: user.profilePicture,
-        Address: user.address
-          ? {
-              upsert: {
-                create: {
-                  street: user.address.street,
-                  number: user.address.number,
-                  postalCode: user.address.postalCode,
-                  city: user.address.city,
-                  country: user.address.country,
-                },
-                update: {
-                  street: user.address.street,
-                  number: user.address.number,
-                  postalCode: user.address.postalCode,
-                  city: user.address.city,
-                  country: user.address.country,
-                },
-              },
-            }
-          : undefined,
-      },
-      include: { Address: true },
+    const dataToUpdate: Prisma.XOR<
+      Prisma.UserUpdateInput,
+      Prisma.UserUncheckedUpdateInput
+    > = {
+      email: user.email,
+      passwordHash: user.passwordHash,
+      name: user.name,
+      birthDate: user.birthDate,
+      profilePicture: user.profilePicture,
+    };
+
+    const operations: any[] = [];
+
+    // Endereço
+    if (user.address) {
+      operations.push(
+        this.prisma.address.upsert({
+          where: { userId: user.id },
+          create: {
+            userId: user.id,
+            street: user.address.street,
+            number: user.address.number,
+            postalCode: user.address.postalCode,
+            city: user.address.city,
+            country: user.address.country,
+          },
+          update: {
+            street: user.address.street,
+            number: user.address.number,
+            postalCode: user.address.postalCode,
+            city: user.address.city,
+            country: user.address.country,
+          },
+        })
+      );
+    } else {
+      operations.push(
+        this.prisma.address.deleteMany({
+          where: { userId: user.id },
+        })
+      );
+    }
+
+    // Telefones
+    const phoneIds = user.phones
+      .map((phone) => phone.id)
+      .filter((id) => id !== undefined);
+
+    operations.push(
+      this.prisma.phone.deleteMany({
+        where: {
+          userId: user.id,
+          id: { notIn: phoneIds },
+        },
+      })
+    );
+
+    user.phones.forEach((phone) => {
+      if (phone.id) {
+        operations.push(
+          this.prisma.phone.update({
+            where: { id: phone.id },
+            data: {
+              number: phone.number,
+              isPrimary: phone.isPrimary,
+            },
+          })
+        );
+      } else {
+        operations.push(
+          this.prisma.phone.create({
+            data: {
+              userId: user.id,
+              number: phone.number,
+              isPrimary: phone.isPrimary,
+            },
+          })
+        );
+      }
     });
+
+    // Documento
+    if (user.document) {
+      operations.push(
+        this.prisma.document.update({
+          where: { id: user.document.id },
+          data: {
+            rg: user.document.rg,
+            cpf: user.document.cpf,
+            otherInfo: user.document.otherInfo,
+          },
+        })
+      );
+    }
+
+    // Atualizar usuário
+    operations.push(
+      this.prisma.user.update({
+        where: { id: user.id },
+        data: {
+          ...dataToUpdate,
+          updatedAt: new Date(),
+        },
+        include: {
+          Address: true,
+          phones: true,
+          document: true,
+        },
+      })
+    );
+
+    const [updatedUser] = await this.prisma.$transaction(operations);
 
     return this.mapPrismaUserToDomain(updatedUser);
   }
 
   async findById(userId: number): Promise<User | null> {
-    const user = await prisma.user.findUnique({
+    const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      include: { Address: true },
+      include: { Address: true, document: true, phones: true },
     });
 
-    if (!user) {
-      return null;
-    }
-
-    return this.mapPrismaUserToDomain(user);
+    return user ? this.mapPrismaUserToDomain(user) : null;
   }
 
-  // Helper para mapear o Prisma User para o domínio User
+  async findByEmail(email: string): Promise<User | null> {
+    const user = await this.prisma.user.findUnique({
+      where: { email },
+      include: { Address: true, document: true, phones: true },
+    });
+
+    return user ? this.mapPrismaUserToDomain(user) : null;
+  }
+
   private mapPrismaUserToDomain(prismaUser: any): User {
     const userAddress = prismaUser.Address
       ? new Address(
@@ -97,6 +200,28 @@ export class PrismaUserRepository implements IUserRepository {
         )
       : undefined;
 
+    console.log(prismaUser.document);
+
+    const userDocument = new Document(
+      {
+        rg: prismaUser.document.rg,
+        cpf: prismaUser.document.cpf,
+        otherInfo: prismaUser.document.otherInfo,
+      },
+      prismaUser.document.id
+    );
+
+    const userPhones = prismaUser.phones.map(
+      (phone: any) =>
+        new Phone(
+          {
+            number: phone.number,
+            isPrimary: phone.isPrimary,
+          },
+          phone.id
+        )
+    );
+
     return new User(
       {
         email: prismaUser.email,
@@ -105,6 +230,8 @@ export class PrismaUserRepository implements IUserRepository {
         birthDate: prismaUser.birthDate,
         profilePicture: prismaUser.profilePicture,
         address: userAddress,
+        document: userDocument,
+        phones: userPhones,
       },
       prismaUser.id
     );

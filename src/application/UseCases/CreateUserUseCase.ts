@@ -2,6 +2,8 @@
 import { IUserRepository } from "../repositories/IUserRepository";
 import { User } from "../../domain/entities/User";
 import { Address } from "../../domain/entities/Address";
+import { Document } from "../../domain/entities/Document";
+import { Phone } from "../../domain/entities/Phone";
 
 interface CreateUserRequest {
   email: string;
@@ -16,12 +18,24 @@ interface CreateUserRequest {
     city: string;
     country: string;
   };
+  document: {
+    cpf: string;
+    rg: string;
+    otherInfo?: string;
+  };
+  phones: {
+    number: string;
+    isPrimary: boolean;
+  }[];
 }
 
 export class CreateUserUseCase {
   constructor(private userRepository: IUserRepository) {}
 
   async execute(data: CreateUserRequest): Promise<User> {
+    const userFinded = await this.userRepository.findByEmail(data.email);
+    if (!!userFinded) throw new Error("Email already exist");
+
     const user = new User({
       email: data.email,
       passwordHash: data.passwordHash,
@@ -37,6 +51,17 @@ export class CreateUserUseCase {
             country: data.address.country,
           })
         : undefined,
+      document: new Document({
+        cpf: data.document.cpf,
+        rg: data.document.rg,
+        otherInfo: data.document.otherInfo,
+      }),
+      phones: data.phones.map((phone) => {
+        return new Phone({
+          number: phone.number,
+          isPrimary: phone.isPrimary,
+        });
+      }),
     });
 
     return await this.userRepository.create(user);

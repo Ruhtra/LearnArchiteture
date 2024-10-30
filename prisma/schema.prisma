@@ -3,25 +3,25 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
   id             Int       @id @default(autoincrement())
-  email          String    @db.VarChar(255)
+  email          String    @unique @db.VarChar(255) // Nome único global para email
   passwordHash   String    @db.VarChar(255)
   name           String    @db.VarChar(255)
   birthDate      DateTime? @db.Date
-  profilePicture Bytes?
+  profilePicture String?
   createdAt      DateTime  @default(now()) @db.Timestamptz(6)
   updatedAt      DateTime  @updatedAt @db.Timestamptz(6)
   Address        Address?
-  phones         Phone[] // Relacionamento com telefones
-  documet        Document  @relation(fields: [documentId], references: [id])
+  phones         Phone[]
+  document       Document  @relation(fields: [documentId], references: [id], onDelete: Cascade) // Define o relacionamento
   documentId     Int       @unique
 
-  @@unique([email])
   @@map("users")
 }
 
@@ -58,11 +58,11 @@ model Document {
   id        Int      @id @default(autoincrement())
   rg        String   @db.VarChar(20)
   cpf       String   @db.VarChar(20)
-  otherInfo String?  @db.VarChar(255) // Outros tipos de documentos, opcional
+  otherInfo String?  @db.VarChar(255)
   createdAt DateTime @default(now()) @db.Timestamptz(6)
   updatedAt DateTime @updatedAt @db.Timestamptz(6)
-  User      User?
+  user      User?
 
-  @@unique([rg, cpf]) // Garantia de que RG e CPF sejam únicos
+  @@unique([rg, cpf])
   @@map("documents")
 }
