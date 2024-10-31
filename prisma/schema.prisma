@@ -36,7 +36,6 @@ model Address {
   updatedAt  DateTime @updatedAt @db.Timestamptz(6)
   User       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([street, number, postalCode, city, country])
   @@map("addresses")
 }
 

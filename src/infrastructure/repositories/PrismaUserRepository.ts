@@ -6,6 +6,7 @@ import { Document } from "../../domain/entities/Document";
 import { IUserRepository } from "../../application/repositories/IUserRepository";
 import { Phone } from "../../domain/entities/Phone";
 import { DefaultArgs } from "@prisma/client/runtime/library";
+import { tuple } from "zod";
 
 export class PrismaUserRepository implements IUserRepository {
   constructor(
@@ -55,15 +56,92 @@ export class PrismaUserRepository implements IUserRepository {
     return this.mapPrismaUserToDomain(createdUser);
   }
   async update(user: User): Promise<User> {
-    const usera = await this.findById(user.id);
+    // Verificar se o Address existe antes de executar o update
+    const existingAddress = await this.prisma.address.findUnique({
+      where: { userId: user.id },
+      select: { id: true },
+    });
 
-    console.log("old");
-    console.log(usera);
+    const phoneIdsFromClient = user.phones
+      .map((phone) => phone.id)
+      .filter((id) => id !== undefined);
 
-    console.log("novo");
-    console.log(user);
-    if (usera) return usera;
-    throw new Error("");
+    const response = await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        birthDate: user.birthDate,
+        email: user.email,
+        name: user.name,
+        passwordHash: user.passwordHash,
+        profilePicture: user.profilePicture,
+
+        Document: user.document
+          ? {
+              upsert: {
+                create: {
+                  cpf: user.document.cpf,
+                  id: user.document.id,
+                  rg: user.document.rg,
+                  otherInfo: user.document.otherInfo,
+                },
+                update: {
+                  cpf: user.document.cpf,
+                  rg: user.document.rg,
+                  otherInfo: user.document.otherInfo,
+                },
+              },
+            }
+          : { delete: true },
+
+        Address: user.address
+          ? {
+              upsert: {
+                create: {
+                  city: user.address.city,
+                  country: user.address.country,
+                  id: user.address.id,
+                  number: user.address.number,
+                  postalCode: user.address.postalCode,
+                  street: user.address.street,
+                },
+                update: {
+                  city: user.address.city,
+                  country: user.address.country,
+                  number: user.address.number,
+                  postalCode: user.address.postalCode,
+                  street: user.address.street,
+                },
+              },
+            }
+          : existingAddress
+          ? { delete: true }
+          : undefined,
+        phones: {
+          deleteMany: {
+            id: { notIn: phoneIdsFromClient },
+          },
+          upsert: user.phones.map((phone) => ({
+            where: { id: phone.id },
+            create: {
+              id: phone.id,
+              number: phone.number,
+              isPrimary: phone.isPrimary,
+            },
+            update: {
+              number: phone.number,
+              isPrimary: phone.isPrimary,
+            },
+          })),
+        },
+      },
+      include: {
+        Address: true,
+        Document: true,
+        phones: true,
+      },
+    });
+
+    return this.mapPrismaUserToDomain(response);
   }
 
   async findById(userId: string): Promise<User | null> {

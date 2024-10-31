@@ -48,9 +48,9 @@ const main = async () => {
     // },
     phones: [
       {
-        id: "1f5adc5e-b31d-40fd-93f4-9ae18dd60987",
+        id: "50b11780-7562-4c91-b918-00b968373a29",
         isPrimary: true,
-        number: "84999221557",
+        number: "84996993533",
       },
       {
         isPrimary: false,
@@ -58,6 +58,8 @@ const main = async () => {
       },
     ],
   });
+
+  console.log(resposne);
 };
 
 main();
