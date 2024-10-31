@@ -16,12 +16,12 @@ export class Phone {
 
   static createPhoneSchema = z.object({
     number: z.string().min(10, "Phone number must have at least 10 digits"),
-    isPrimary: z.boolean().optional().default(false),
+    isPrimary: z.boolean().optional().nullable().default(false),
   });
 
   static updatePhoneSchema = z.object({
-    number: z.string().min(10).optional(),
-    isPrimary: z.boolean().optional(),
+    number: z.string().min(10).optional().nullable(),
+    isPrimary: z.boolean().optional().nullable(),
   });
 
   public updatePhone(data: Partial<PhoneProps>): void {

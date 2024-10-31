@@ -30,11 +30,11 @@ export class Address {
   });
 
   static updateAddressSchema = z.object({
-    street: z.string().min(1).optional(),
-    number: z.string().min(1).optional(),
-    postalCode: z.string().min(1).optional(),
-    city: z.string().min(1).optional(),
-    country: z.string().min(1).optional(),
+    street: z.string().min(1).optional().nullable(),
+    number: z.string().min(1).optional().nullable(),
+    postalCode: z.string().min(1).optional().nullable(),
+    city: z.string().min(1).optional().nullable(),
+    country: z.string().min(1).optional().nullable(),
   });
 
   public updateAddress(data: Partial<AddressProps>): void {

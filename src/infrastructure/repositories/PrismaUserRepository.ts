@@ -31,7 +31,7 @@ export class PrismaUserRepository implements IUserRepository {
               },
             }
           : undefined,
-        document: {
+        Document: {
           create: {
             cpf: user.document.cpf,
             rg: user.document.rg,
@@ -45,7 +45,7 @@ export class PrismaUserRepository implements IUserRepository {
           })),
         },
       },
-      include: { Address: true, document: true, phones: true },
+      include: { Address: true, Document: true, phones: true },
     });
 
     return this.mapPrismaUserToDomain(createdUser);
@@ -133,6 +133,8 @@ export class PrismaUserRepository implements IUserRepository {
       }
     });
 
+    console.log(user.document);
+
     // Documento
     if (user.document) {
       operations.push(
@@ -158,7 +160,7 @@ export class PrismaUserRepository implements IUserRepository {
         include: {
           Address: true,
           phones: true,
-          document: true,
+          Document: true,
         },
       })
     );
@@ -171,7 +173,7 @@ export class PrismaUserRepository implements IUserRepository {
   async findById(userId: number): Promise<User | null> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      include: { Address: true, document: true, phones: true },
+      include: { Address: true, Document: true, phones: true },
     });
 
     return user ? this.mapPrismaUserToDomain(user) : null;
@@ -180,7 +182,7 @@ export class PrismaUserRepository implements IUserRepository {
   async findByEmail(email: string): Promise<User | null> {
     const user = await this.prisma.user.findUnique({
       where: { email },
-      include: { Address: true, document: true, phones: true },
+      include: { Address: true, Document: true, phones: true },
     });
 
     return user ? this.mapPrismaUserToDomain(user) : null;
@@ -200,16 +202,20 @@ export class PrismaUserRepository implements IUserRepository {
         )
       : undefined;
 
-    console.log(prismaUser.document);
+    console.log("here");
+
+    console.log(prismaUser.Document);
 
     const userDocument = new Document(
       {
-        rg: prismaUser.document.rg,
-        cpf: prismaUser.document.cpf,
-        otherInfo: prismaUser.document.otherInfo,
+        rg: prismaUser.Document.rg,
+        cpf: prismaUser.Document.cpf,
+        otherInfo: prismaUser.Document.otherInfo,
       },
-      prismaUser.document.id
+      prismaUser.Document.id
     );
+
+    console.log(userDocument);
 
     const userPhones = prismaUser.phones.map(
       (phone: any) =>

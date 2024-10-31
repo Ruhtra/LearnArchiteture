@@ -8,7 +8,6 @@ CREATE TABLE "users" (
     "profilePicture" TEXT,
     "createdAt" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMPTZ(6) NOT NULL,
-    "documentId" INTEGER NOT NULL,
 
     CONSTRAINT "users_pkey" PRIMARY KEY ("id")
 );
@@ -48,15 +47,13 @@ CREATE TABLE "documents" (
     "otherInfo" VARCHAR(255),
     "createdAt" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMPTZ(6) NOT NULL,
+    "userId" INTEGER NOT NULL,
 
     CONSTRAINT "documents_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
 CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
-
--- CreateIndex
-CREATE UNIQUE INDEX "users_documentId_key" ON "users"("documentId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "addresses_userId_key" ON "addresses"("userId");
@@ -68,13 +65,16 @@ CREATE UNIQUE INDEX "addresses_street_number_postalCode_city_country_key" ON "ad
 CREATE UNIQUE INDEX "phones_number_key" ON "phones"("number");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "documents_rg_cpf_key" ON "documents"("rg", "cpf");
+CREATE UNIQUE INDEX "documents_userId_key" ON "documents"("userId");
 
--- AddForeignKey
-ALTER TABLE "users" ADD CONSTRAINT "users_documentId_fkey" FOREIGN KEY ("documentId") REFERENCES "documents"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+-- CreateIndex
+CREATE UNIQUE INDEX "documents_rg_cpf_key" ON "documents"("rg", "cpf");
 
 -- AddForeignKey
 ALTER TABLE "addresses" ADD CONSTRAINT "addresses_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "phones" ADD CONSTRAINT "phones_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "documents" ADD CONSTRAINT "documents_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

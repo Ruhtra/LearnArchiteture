@@ -16,6 +16,15 @@ interface UpdateUserRequest {
     city: string;
     country: string;
   };
+  document?: {
+    cpf: string;
+    rg: string;
+    otherInfo?: string;
+  };
+  phones?: {
+    number: string;
+    isPrimary: boolean;
+  }[];
 }
 
 export class UpdateUserUseCase {
@@ -25,6 +34,8 @@ export class UpdateUserUseCase {
     const user = await this.userRepository.findById(data.userId);
 
     if (!user) throw new Error("User not found");
+
+    console.log(user);
 
     user.updateUser({
       email: data.email,
@@ -40,6 +51,19 @@ export class UpdateUserUseCase {
             city: data.address.city,
             country: data.address.country,
           }
+        : undefined,
+      document: data.document
+        ? {
+            cpf: data.document.cpf,
+            rg: data.document.rg,
+            otherInfo: data.document.otherInfo,
+          }
+        : undefined,
+      phones: data.phones
+        ? data.phones.map((phone) => ({
+            number: phone.number,
+            isPrimary: phone.isPrimary,
+          }))
         : undefined,
     });
 

@@ -18,9 +18,8 @@ model User {
   createdAt      DateTime  @default(now()) @db.Timestamptz(6)
   updatedAt      DateTime  @updatedAt @db.Timestamptz(6)
   Address        Address?
+  Document       Document?
   phones         Phone[]
-  document       Document  @relation(fields: [documentId], references: [id], onDelete: Cascade) // Define o relacionamento
-  documentId     Int       @unique
 
   @@map("users")
 }
@@ -61,7 +60,8 @@ model Document {
   otherInfo String?  @db.VarChar(255)
   createdAt DateTime @default(now()) @db.Timestamptz(6)
   updatedAt DateTime @updatedAt @db.Timestamptz(6)
-  user      User?
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int      @unique
 
   @@unique([rg, cpf])
   @@map("documents")

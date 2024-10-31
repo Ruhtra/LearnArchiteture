@@ -33,22 +33,22 @@ export class User {
     email: z.string().email("Invalid email format"),
     passwordHash: z.string().min(6, "Password must have at least 6 characters"),
     name: z.string().min(3, "Name must have at least 3 characters"),
-    birthDate: z.date().optional(),
-    profilePicture: z.string().optional(),
-    address: Address.createAddressSchema.optional(),
-    phones: z.array(Phone.createPhoneSchema).optional(),
+    birthDate: z.date().optional().nullable(),
+    profilePicture: z.string().optional().nullable(),
+    address: Address.createAddressSchema.optional().nullable(),
+    phones: z.array(Phone.createPhoneSchema).optional().nullable(),
     document: Document.createDocumentSchema, // Documento obrigatório
   });
 
   static updateUserSchema = z.object({
-    email: z.string().email().optional(),
-    passwordHash: z.string().min(6).optional(),
-    name: z.string().min(3).optional(),
-    birthDate: z.date().optional(),
-    profilePicture: z.string().optional(),
-    address: Address.updateAddressSchema.optional(),
-    phones: z.array(Phone.updatePhoneSchema).optional(),
-    document: Document.updateDocumentSchema.optional(),
+    email: z.string().email().optional().nullable(),
+    passwordHash: z.string().min(6).optional().nullable(),
+    name: z.string().min(3).optional().nullable(),
+    birthDate: z.date().optional().nullable(),
+    profilePicture: z.string().optional().nullable(),
+    address: Address.updateAddressSchema.optional().nullable(),
+    phones: z.array(Phone.updatePhoneSchema).optional().nullable(),
+    document: Document.updateDocumentSchema.optional().nullable(),
   });
 
   public updateUser(data: Partial<UserProps>): void {

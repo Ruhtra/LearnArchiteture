@@ -19,13 +19,13 @@ export class Document {
   static createDocumentSchema = z.object({
     rg: z.string().min(1, "RG is required"),
     cpf: z.string().min(11, "CPF must have at least 11 characters"),
-    otherInfo: z.string().optional(),
+    otherInfo: z.string().optional().nullable(),
   });
 
   static updateDocumentSchema = z.object({
-    rg: z.string().optional(),
-    cpf: z.string().optional(),
-    otherInfo: z.string().optional(),
+    rg: z.string().optional().nullable(),
+    cpf: z.string().optional().nullable(),
+    otherInfo: z.string().optional().nullable(),
   });
 
   public updateDocument(data: Partial<DocumentProps>): void {
