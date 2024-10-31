@@ -40,7 +40,7 @@ export class Phone {
     isPrimary: z.boolean().nullable().optional(),
   });
 
-  public updatePhone(data: Partial<Phone>): void {
+  public updatePhone(data: Partial<PhoneProps>): void {
     Phone.updatePhoneSchema.parse(data);
 
     if (data.number) this.number = data.number;

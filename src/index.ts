@@ -36,18 +36,28 @@ const main = async () => {
     birthDate: new Date(),
     document: {
       cpf: "70119006405",
-      rg: "0005",
+      rg: "0004",
       otherInfo: "sim",
     },
+    // address: {
+    //   city: "aaaa",
+    //   country: "ohamaga",
+    //   number: "ohamaga",
+    //   postalCode: "ohamaga",
+    //   street: "ohamaga",
+    // },
     phones: [
       {
+        id: "1f5adc5e-b31d-40fd-93f4-9ae18dd60987",
         isPrimary: true,
+        number: "84999221557",
+      },
+      {
+        isPrimary: false,
         number: "84999221557",
       },
     ],
   });
-
-  console.log(resposne);
 };
 
 main();

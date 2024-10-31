@@ -45,7 +45,7 @@ export class Document {
     otherInfo: z.string().nullable().optional(),
   });
 
-  public updateDocument(data: Partial<Document>): void {
+  public updateDocument(data: Partial<DocumentProps>): void {
     Document.updateDocumentSchema.parse(data);
 
     if (data.rg) this.rg = data.rg;

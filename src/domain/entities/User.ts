@@ -68,7 +68,7 @@ export class User {
     passwordHash: z.string().min(6).nullable().optional(),
     name: z.string().min(3).nullable().optional(),
     birthDate: z.date().nullable().optional(),
-    profilePicture: z.instanceof(Buffer).nullable().optional(),
+    profilePicture: z.string().nullable().optional(),
     address: Address.updateAddressSchema.nullable().optional(),
     phones: z.array(Phone.updatePhoneSchema).nullable().optional(),
     document: Document.updateDocumentSchema.nullable().optional(),
@@ -83,18 +83,8 @@ export class User {
     if (data.name) this.name = data.name;
     if (data.birthDate) this.birthDate = data.birthDate;
     if (data.profilePicture) this.profilePicture = data.profilePicture;
-    if (data.address) {
-      if (this.address) {
-        this.address.updateAddress(data.address);
-      } else {
-        this.address = data.address;
-      }
-    }
-    if (data.document) {
-      this.document.updateDocument(data.document);
-    }
-    if (data.phones) {
-      this.phones = data.phones.map((phoneData) => phoneData);
-    }
+    if (data.address) this.address = data.address;
+    if (data.phones) this.phones = data.phones;
+    if (data.document) this.document = data.document;
   }
 }

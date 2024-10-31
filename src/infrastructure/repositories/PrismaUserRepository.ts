@@ -54,131 +54,16 @@ export class PrismaUserRepository implements IUserRepository {
 
     return this.mapPrismaUserToDomain(createdUser);
   }
-
   async update(user: User): Promise<User> {
-    const dataToUpdate: Prisma.XOR<
-      Prisma.UserUpdateInput,
-      Prisma.UserUncheckedUpdateInput
-    > = {
-      email: user.email,
-      passwordHash: user.passwordHash,
-      name: user.name,
-      birthDate: user.birthDate,
-      profilePicture: user.profilePicture,
-    };
+    const usera = await this.findById(user.id);
 
-    const operations: any[] = [];
+    console.log("old");
+    console.log(usera);
 
-    console.log(user.address);
-
-    // Endereço
-    if (user.address) {
-      operations.push(
-        this.prisma.address.upsert({
-          where: { userId: user.id },
-          create: {
-            userId: user.id,
-            id: user.address.id,
-            street: user.address.street,
-            number: user.address.number,
-            postalCode: user.address.postalCode,
-            city: user.address.city,
-            country: user.address.country,
-          },
-          update: {
-            street: user.address.street,
-            number: user.address.number,
-            postalCode: user.address.postalCode,
-            city: user.address.city,
-            country: user.address.country,
-          },
-        })
-      );
-    } else {
-      operations.push(
-        this.prisma.address.deleteMany({
-          where: {
-            id: ,
-            userId: user.id,
-          },
-        })
-      );
-    }
-
-    // Telefones
-    const phoneIds = user.phones
-      .map((phone) => phone.id)
-      .filter((id) => id !== undefined);
-
-    operations.push(
-      this.prisma.phone.deleteMany({
-        where: {
-          userId: user.id,
-          id: { notIn: phoneIds },
-        },
-      })
-    );
-
-    user.phones.forEach((phone) => {
-      if (phone.id) {
-        operations.push(
-          this.prisma.phone.update({
-            where: { id: phone.id },
-            data: {
-              number: phone.number,
-              isPrimary: phone.isPrimary,
-            },
-          })
-        );
-      } else {
-        operations.push(
-          this.prisma.phone.create({
-            data: {
-              id: phone.id,
-              userId: user.id,
-              number: phone.number,
-              isPrimary: phone.isPrimary,
-            },
-          })
-        );
-      }
-    });
-
-    console.log(user.document);
-
-    // Documento
-    if (user.document) {
-      operations.push(
-        this.prisma.document.update({
-          where: { id: user.document.id },
-          data: {
-            rg: user.document.rg,
-            cpf: user.document.cpf,
-            otherInfo: user.document.otherInfo,
-          },
-        })
-      );
-    }
-
-    // Atualizar usuário
-    operations.push(
-      this.prisma.user.update({
-        where: { id: user.id },
-        data: {
-          ...dataToUpdate,
-          updatedAt: new Date(),
-        },
-        include: {
-          Address: true,
-          phones: true,
-          Document: true,
-        },
-      })
-    );
-
-    const [updatedUser] = await this.prisma.$transaction(operations);
-
-    return this.mapPrismaUserToDomain(updatedUser);
+    console.log("novo");
+    console.log(user);
+    if (usera) return usera;
+    throw new Error("");
   }
 
   async findById(userId: string): Promise<User | null> {
@@ -221,8 +106,6 @@ export class PrismaUserRepository implements IUserRepository {
       },
       prismaUser.Document.id
     );
-
-    console.log(userDocument);
 
     const userPhones = prismaUser.phones.map((phone: any) =>
       Phone.with(
