@@ -36,14 +36,14 @@ export class CreateUserUseCase {
     const userFinded = await this.userRepository.findByEmail(data.email);
     if (!!userFinded) throw new Error("Email already exist");
 
-    const user = new User({
+    const user = User.create({
       email: data.email,
       passwordHash: data.passwordHash,
       name: data.name,
       birthDate: data.birthDate,
       profilePicture: data.profilePicture,
       address: data.address
-        ? new Address({
+        ? Address.create({
             street: data.address.street,
             number: data.address.number,
             postalCode: data.address.postalCode,
@@ -51,13 +51,13 @@ export class CreateUserUseCase {
             country: data.address.country,
           })
         : undefined,
-      document: new Document({
+      document: Document.create({
         cpf: data.document.cpf,
         rg: data.document.rg,
         otherInfo: data.document.otherInfo,
       }),
       phones: data.phones.map((phone) => {
-        return new Phone({
+        return Phone.create({
           number: phone.number,
           isPrimary: phone.isPrimary,
         });

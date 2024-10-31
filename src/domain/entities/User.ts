@@ -1,9 +1,20 @@
 // src/domain/entities/User.ts
 import { z } from "zod";
-import { Address, AddressProps } from "./Address";
-import { Phone, PhoneProps } from "./Phone";
-import { Document, DocumentProps } from "./Document";
+import { Address } from "./Address";
+import { Phone } from "./Phone";
+import { Document } from "./Document";
 import { randomUUID } from "crypto";
+
+export type UserProps = {
+  email: string;
+  passwordHash: string;
+  name: string;
+  birthDate?: Date;
+  profilePicture?: string;
+  address?: Address;
+  phones: Phone[];
+  document: Document;
+};
 
 export class User {
   public id: string;
@@ -13,45 +24,57 @@ export class User {
   public birthDate?: Date;
   public profilePicture?: string;
   public address?: Address;
-  public phones: Phone[] = []; // Relacionamento 1:N
-  public document: Document; // Relacionamento 1:1 obrigatório
+  public phones: Phone[] = [];
+  public document: Document;
 
-  constructor(props: UserProps, id?: string) {
-    User.createUserSchema.parse(props);
-
+  // Constructor privado para evitar instanciamento direto
+  private constructor(props: UserProps, id?: string) {
     this.email = props.email;
     this.passwordHash = props.passwordHash;
     this.name = props.name;
     this.birthDate = props.birthDate;
     this.profilePicture = props.profilePicture;
-    this.address = props.address ? new Address(props.address) : undefined;
-    this.document = new Document(props.document);
-    this.phones = props.phones.map((phone) => new Phone(phone));
+    this.address = props.address;
+    this.document = props.document;
+    this.phones = props.phones || [];
     this.id = id || randomUUID();
   }
 
+  // Método estático para criar um novo usuário (sem ID)
+  public static create(props: UserProps): User {
+    User.createUserSchema.parse(props);
+    return new User(props);
+  }
+
+  // Método estático para carregar um usuário existente (com ID)
+  public static with(props: UserProps, id: string): User {
+    return new User(props, id);
+  }
+
+  // Schemas Zod para validação
   static createUserSchema = z.object({
     email: z.string().email("Invalid email format"),
     passwordHash: z.string().min(6, "Password must have at least 6 characters"),
     name: z.string().min(3, "Name must have at least 3 characters"),
-    birthDate: z.date().optional().nullable(),
-    profilePicture: z.string().optional().nullable(),
-    address: Address.createAddressSchema.optional().nullable(),
-    phones: z.array(Phone.createPhoneSchema).optional().nullable(),
-    document: Document.createDocumentSchema, // Documento obrigatório
+    birthDate: z.date().nullable().optional(),
+    profilePicture: z.string().nullable().optional(),
+    address: Address.createAddressSchema.nullable().optional(),
+    phones: z.array(Phone.createPhoneSchema).nullable().optional(),
+    document: Document.createDocumentSchema,
   });
 
   static updateUserSchema = z.object({
-    email: z.string().email().optional().nullable(),
-    passwordHash: z.string().min(6).optional().nullable(),
-    name: z.string().min(3).optional().nullable(),
-    birthDate: z.date().optional().nullable(),
-    profilePicture: z.string().optional().nullable(),
-    address: Address.updateAddressSchema.optional().nullable(),
-    phones: z.array(Phone.updatePhoneSchema).optional().nullable(),
-    document: Document.updateDocumentSchema.optional().nullable(),
+    email: z.string().email().nullable().optional(),
+    passwordHash: z.string().min(6).nullable().optional(),
+    name: z.string().min(3).nullable().optional(),
+    birthDate: z.date().nullable().optional(),
+    profilePicture: z.instanceof(Buffer).nullable().optional(),
+    address: Address.updateAddressSchema.nullable().optional(),
+    phones: z.array(Phone.updatePhoneSchema).nullable().optional(),
+    document: Document.updateDocumentSchema.nullable().optional(),
   });
 
+  // Método de atualização de dados do usuário
   public updateUser(data: Partial<UserProps>): void {
     User.updateUserSchema.parse(data);
 
@@ -64,24 +87,14 @@ export class User {
       if (this.address) {
         this.address.updateAddress(data.address);
       } else {
-        this.address = new Address(data.address);
+        this.address = data.address;
       }
     }
-    if (data.document) this.document.updateDocument(data.document);
-
-    if (data.phones)
-      this.phones = data.phones.map((phoneData) => new Phone(phoneData));
+    if (data.document) {
+      this.document.updateDocument(data.document);
+    }
+    if (data.phones) {
+      this.phones = data.phones.map((phoneData) => phoneData);
+    }
   }
 }
-
-// Defina o tipo UserProps que contém apenas os dados brutos de User (sem métodos)
-export type UserProps = {
-  email: string;
-  passwordHash: string;
-  name: string;
-  birthDate?: Date;
-  profilePicture?: string;
-  address?: AddressProps;
-  document: DocumentProps;
-  phones: PhoneProps[];
-};

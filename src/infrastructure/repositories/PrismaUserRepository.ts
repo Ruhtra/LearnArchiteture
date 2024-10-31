@@ -69,6 +69,8 @@ export class PrismaUserRepository implements IUserRepository {
 
     const operations: any[] = [];
 
+    console.log(user.address);
+
     // Endereço
     if (user.address) {
       operations.push(
@@ -95,7 +97,10 @@ export class PrismaUserRepository implements IUserRepository {
     } else {
       operations.push(
         this.prisma.address.deleteMany({
-          where: { userId: user.id },
+          where: {
+            id: ,
+            userId: user.id,
+          },
         })
       );
     }
@@ -196,7 +201,7 @@ export class PrismaUserRepository implements IUserRepository {
 
   private mapPrismaUserToDomain(prismaUser: any): User {
     const userAddress = prismaUser.Address
-      ? new Address(
+      ? Address.with(
           {
             street: prismaUser.Address.street,
             number: prismaUser.Address.number,
@@ -208,11 +213,7 @@ export class PrismaUserRepository implements IUserRepository {
         )
       : undefined;
 
-    console.log("here");
-
-    console.log(prismaUser.Document);
-
-    const userDocument = new Document(
+    const userDocument = Document.with(
       {
         rg: prismaUser.Document.rg,
         cpf: prismaUser.Document.cpf,
@@ -223,18 +224,17 @@ export class PrismaUserRepository implements IUserRepository {
 
     console.log(userDocument);
 
-    const userPhones = prismaUser.phones.map(
-      (phone: any) =>
-        new Phone(
-          {
-            number: phone.number,
-            isPrimary: phone.isPrimary,
-          },
-          phone.id
-        )
+    const userPhones = prismaUser.phones.map((phone: any) =>
+      Phone.with(
+        {
+          number: phone.number,
+          isPrimary: phone.isPrimary,
+        },
+        phone.id
+      )
     );
 
-    return new User(
+    return User.with(
       {
         email: prismaUser.email,
         passwordHash: prismaUser.passwordHash,

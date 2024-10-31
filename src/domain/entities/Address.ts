@@ -2,6 +2,14 @@
 import { randomUUID } from "crypto";
 import { z } from "zod";
 
+export type AddressProps = {
+  street: string;
+  number: string;
+  postalCode: string;
+  city: string;
+  country: string;
+};
+
 export class Address {
   public id: string;
   public street: string;
@@ -10,9 +18,7 @@ export class Address {
   public city: string;
   public country: string;
 
-  constructor(props: AddressProps, id?: string) {
-    Address.createAddressSchema.parse(props); // Valida os dados de entrada
-
+  private constructor(props: AddressProps, id?: string) {
     this.street = props.street;
     this.number = props.number;
     this.postalCode = props.postalCode;
@@ -21,7 +27,18 @@ export class Address {
     this.id = id || randomUUID();
   }
 
-  // Definimos os tipos das propriedades de Address
+  // Método estático para criar um novo endereço
+  public static create(props: AddressProps): Address {
+    Address.createAddressSchema.parse(props);
+    return new Address(props);
+  }
+
+  // Método estático para carregar um endereço existente (com ID)
+  public static with(props: AddressProps, id: string): Address {
+    return new Address(props, id);
+  }
+
+  // Schemas Zod para validação
   static createAddressSchema = z.object({
     street: z.string().min(1, "Street is required"),
     number: z.string().min(1, "Number is required"),
@@ -31,13 +48,14 @@ export class Address {
   });
 
   static updateAddressSchema = z.object({
-    street: z.string().min(1).optional().nullable(),
-    number: z.string().min(1).optional().nullable(),
-    postalCode: z.string().min(1).optional().nullable(),
-    city: z.string().min(1).optional().nullable(),
-    country: z.string().min(1).optional().nullable(),
+    street: z.string().min(1).nullable().optional(),
+    number: z.string().min(1).nullable().optional(),
+    postalCode: z.string().min(1).nullable().optional(),
+    city: z.string().min(1).nullable().optional(),
+    country: z.string().min(1).nullable().optional(),
   });
 
+  // Método de atualização usando Partial<AddressProps>
   public updateAddress(data: Partial<AddressProps>): void {
     Address.updateAddressSchema.parse(data);
 
@@ -48,12 +66,3 @@ export class Address {
     if (data.country) this.country = data.country;
   }
 }
-
-// Defina um tipo que contenha as propriedades brutas de um Address
-export type AddressProps = {
-  street: string;
-  number: string;
-  postalCode: string;
-  city: string;
-  country: string;
-};

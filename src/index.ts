@@ -29,7 +29,7 @@ const main = async () => {
   // });
 
   const resposne = await update.execute({
-    userId: "0084f630-6eee-41d1-a262-64b5a1e2194e",
+    userId: "fdc2cfbd-fffc-42f9-be22-8e92cb76e782",
     email: "kawanarthuskate@gmail.com",
     name: "kawa",
     passwordHash: "hash12",
