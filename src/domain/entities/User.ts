@@ -3,9 +3,10 @@ import { z } from "zod";
 import { Address, AddressProps } from "./Address";
 import { Phone, PhoneProps } from "./Phone";
 import { Document, DocumentProps } from "./Document";
+import { randomUUID } from "crypto";
 
 export class User {
-  public id: number;
+  public id: string;
   public email: string;
   public passwordHash: string;
   public name: string;
@@ -15,7 +16,7 @@ export class User {
   public phones: Phone[] = []; // Relacionamento 1:N
   public document: Document; // Relacionamento 1:1 obrigatório
 
-  constructor(props: UserProps, id?: number) {
+  constructor(props: UserProps, id?: string) {
     User.createUserSchema.parse(props);
 
     this.email = props.email;
@@ -26,7 +27,7 @@ export class User {
     this.address = props.address ? new Address(props.address) : undefined;
     this.document = new Document(props.document);
     this.phones = props.phones.map((phone) => new Phone(phone));
-    this.id = id || 0;
+    this.id = id || randomUUID();
   }
 
   static createUserSchema = z.object({

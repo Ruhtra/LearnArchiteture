@@ -15,6 +15,7 @@ export class PrismaUserRepository implements IUserRepository {
   async create(user: User): Promise<User> {
     const createdUser = await this.prisma.user.create({
       data: {
+        id: user.id,
         email: user.email,
         passwordHash: user.passwordHash,
         name: user.name,
@@ -23,6 +24,7 @@ export class PrismaUserRepository implements IUserRepository {
         Address: user.address
           ? {
               create: {
+                id: user.address.id,
                 street: user.address.street,
                 number: user.address.number,
                 postalCode: user.address.postalCode,
@@ -33,6 +35,7 @@ export class PrismaUserRepository implements IUserRepository {
           : undefined,
         Document: {
           create: {
+            id: user.document.id,
             cpf: user.document.cpf,
             rg: user.document.rg,
             otherInfo: user.document.otherInfo,
@@ -40,6 +43,7 @@ export class PrismaUserRepository implements IUserRepository {
         },
         phones: {
           create: user.phones.map((phone) => ({
+            id: phone.id,
             number: phone.number,
             isPrimary: phone.isPrimary,
           })),
@@ -72,6 +76,7 @@ export class PrismaUserRepository implements IUserRepository {
           where: { userId: user.id },
           create: {
             userId: user.id,
+            id: user.address.id,
             street: user.address.street,
             number: user.address.number,
             postalCode: user.address.postalCode,
@@ -124,6 +129,7 @@ export class PrismaUserRepository implements IUserRepository {
         operations.push(
           this.prisma.phone.create({
             data: {
+              id: phone.id,
               userId: user.id,
               number: phone.number,
               isPrimary: phone.isPrimary,
@@ -170,7 +176,7 @@ export class PrismaUserRepository implements IUserRepository {
     return this.mapPrismaUserToDomain(updatedUser);
   }
 
-  async findById(userId: number): Promise<User | null> {
+  async findById(userId: string): Promise<User | null> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       include: { Address: true, Document: true, phones: true },

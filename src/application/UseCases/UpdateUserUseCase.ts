@@ -3,7 +3,7 @@ import { IUserRepository } from "../repositories/IUserRepository";
 import { User } from "../../domain/entities/User";
 
 interface UpdateUserRequest {
-  userId: number;
+  userId: string;
   email?: string;
   passwordHash?: string;
   name?: string;

@@ -1,19 +1,20 @@
 // src/domain/entities/Document.ts
+import { randomUUID } from "crypto";
 import { z } from "zod";
 
 export class Document {
-  public id: number;
+  public id: string;
   public rg: string;
   public cpf: string;
   public otherInfo?: string;
 
-  constructor(props: DocumentProps, id?: number) {
+  constructor(props: DocumentProps, id?: string) {
     Document.createDocumentSchema.parse(props);
 
     this.rg = props.rg;
     this.cpf = props.cpf;
     this.otherInfo = props.otherInfo;
-    this.id = id || 0;
+    this.id = id ?? randomUUID();
   }
 
   static createDocumentSchema = z.object({

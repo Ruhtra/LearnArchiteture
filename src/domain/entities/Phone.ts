@@ -1,17 +1,18 @@
 // src/domain/entities/Phone.ts
+import { randomUUID } from "crypto";
 import { z } from "zod";
 
 export class Phone {
-  public id: number;
+  public id: string;
   public number: string;
   public isPrimary: boolean;
 
-  constructor(props: PhoneProps, id?: number) {
+  constructor(props: PhoneProps, id?: string) {
     Phone.createPhoneSchema.parse(props);
 
     this.number = props.number;
     this.isPrimary = props.isPrimary;
-    this.id = id || 0;
+    this.id = id || randomUUID();
   }
 
   static createPhoneSchema = z.object({

@@ -1,15 +1,16 @@
 // src/domain/entities/Address.ts
+import { randomUUID } from "crypto";
 import { z } from "zod";
 
 export class Address {
-  public id: number;
+  public id: string;
   public street: string;
   public number: string;
   public postalCode: string;
   public city: string;
   public country: string;
 
-  constructor(props: AddressProps, id?: number) {
+  constructor(props: AddressProps, id?: string) {
     Address.createAddressSchema.parse(props); // Valida os dados de entrada
 
     this.street = props.street;
@@ -17,7 +18,7 @@ export class Address {
     this.postalCode = props.postalCode;
     this.city = props.city;
     this.country = props.country;
-    this.id = id || 0;
+    this.id = id || randomUUID();
   }
 
   // Definimos os tipos das propriedades de Address

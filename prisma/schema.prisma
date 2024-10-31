@@ -9,7 +9,7 @@ datasource db {
 }
 
 model User {
-  id             Int       @id @default(autoincrement())
+  id             String    @id @unique
   email          String    @unique @db.VarChar(255) // Nome único global para email
   passwordHash   String    @db.VarChar(255)
   name           String    @db.VarChar(255)
@@ -25,8 +25,8 @@ model User {
 }
 
 model Address {
-  id         Int      @id @default(autoincrement())
-  userId     Int      @unique
+  id         String   @id @unique
+  userId     String   @unique
   street     String   @db.VarChar(255)
   number     String   @db.VarChar(10)
   postalCode String   @db.VarChar(20)
@@ -41,10 +41,10 @@ model Address {
 }
 
 model Phone {
-  id        Int      @id @default(autoincrement())
+  id        String   @id @unique
   number    String   @db.VarChar(20)
   isPrimary Boolean  @default(false)
-  userId    Int
+  userId    String
   User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now()) @db.Timestamptz(6)
   updatedAt DateTime @updatedAt @db.Timestamptz(6)
@@ -54,14 +54,14 @@ model Phone {
 }
 
 model Document {
-  id        Int      @id @default(autoincrement())
+  id        String   @id @unique
   rg        String   @db.VarChar(20)
   cpf       String   @db.VarChar(20)
   otherInfo String?  @db.VarChar(255)
   createdAt DateTime @default(now()) @db.Timestamptz(6)
   updatedAt DateTime @updatedAt @db.Timestamptz(6)
   user      User     @relation(fields: [userId], references: [id])
-  userId    Int      @unique
+  userId    String   @unique
 
   @@unique([rg, cpf])
   @@map("documents")
